@@ -1,0 +1,44 @@
+{
+  "name": "vibeslide",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "npm run build:slide-css && next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build:slide-css": "tailwindcss -i ./src/styles/slide-tailwind.css -o ./public/slide-tailwind.css --minify"
+  },
+  "dependencies": {
+    "autoprefixer": "^10.4.21",
+    "better-sqlite3": "^12.0.0",
+    "isomorphic-dompurify": "^2.24.0",
+    "mammoth": "^1.10.0",
+    "marked": "^16.0.0",
+    "next": "16.2.10",
+    "openai": "^4.90.0",
+    "pdf-parse": "^1.1.1",
+    "playwright": "^1.52.0",
+    "postcss": "^8.5.0",
+    "postcss-safe-parser": "^7.0.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwindcss": "^3.4.17",
+    "xlsx": "^0.18.5",
+    "zod": "^3.25.0",
+    "zod-to-json-schema": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20",
+    "@types/pdf-parse": "^1.1.5",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
+    "typescript": "^5",
+    "vitest": "^3.0.0"
+  }
+}
