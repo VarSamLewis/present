@@ -7,6 +7,7 @@
     "build": "npm run build:slide-css && next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "build:slide-css": "tailwindcss -i ./src/styles/slide-tailwind.css -o ./public/slide-tailwind.css --minify"
