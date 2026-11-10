@@ -1,6 +1,35 @@
 # Vibeslide
 
+[![CI](https://github.com/VarSamLewis/present/actions/workflows/ci.yml/badge.svg)](https://github.com/VarSamLewis/present/actions/workflows/ci.yml)
+
 A local-first web application that turns documents into presentations. Each slide is a self-contained bundle of HTML, Tailwind CSS classes, and inline SVG. The app runs entirely on your machine and calls external APIs only for LLM generation and embeddings.
+
+## Guides
+
+- **[User Guide](docs/user-guide.md)** — setup, workflow, tips, troubleshooting
+- **[Deployment Guide](docs/deployment.md)** — Docker, bare-metal servers, TLS, auth, backups
+
+## Quick start
+
+```bash
+nvm use
+npm install
+npx playwright install chromium
+npm run build
+npm start        # http://localhost:3000
+```
+
+Then open **Settings** in the app and paste your OpenAI-compatible API key — no `.env` file required.
+
+Or with Docker:
+
+```bash
+docker compose up -d --build
+```
+
+Or deploy to [Railway](https://railway.com) — it builds the Dockerfile and runs
+the `/api/health` check (mount a volume at `/app/data`; see the
+[Deployment Guide](docs/deployment.md#option-b-railway)).
 
 ## What it does
 
@@ -38,27 +67,12 @@ npx playwright install chromium
 
 ## Environment variables
 
-Copy `.env.example` to `.env.local` and fill in your keys.
+No `.env.local` is required. API keys are configured in the app under **Settings** (`/settings`) —
+bring your own OpenAI-compatible key and it is stored in the local database.
 
-```bash
-# Storage
-DATABASE_PATH=./data/vibeslide.db
-DATA_DIRECTORY=./data
-
-# OpenAI / embeddings
-EMBEDDING_API_URL=https://api.openai.com/v1/embeddings
-EMBEDDING_API_KEY=<your-key>
-EMBEDDING_MODEL=text-embedding-3-small
-
-AI_PROVIDER=openai
-AI_GENERATION_MODEL=gpt-4o
-AI_API_KEY=<your-key>
-
-# Pipeline tuning
-MAX_SOURCE_CHUNKS_PER_SLIDE=8
-MAX_SLIDE_REPAIR_ATTEMPTS=2
-SLIDE_GENERATION_CONCURRENCY=2
-```
+Optionally, copy `.env.example` to `.env.local` to tune storage paths, the embedding model, or the
+generation pipeline. To require sign-in on a hosted install, set the `WORKOS_*` variables (see the
+[Deployment Guide](docs/deployment.md#authentication-optional-but-recommended-for-hosted-installs)).
 
 ## Running locally
 
@@ -81,6 +95,7 @@ The app runs at `http://localhost:3000` by default.
 src/
   app/                    Next.js app router pages
   components/             Shared React components
+  proxy.ts                Request gate (WorkOS AuthKit sign-in when configured)
   lib/
     db/                   SQLite schema, migrations, queries
     storage/              Filesystem helpers
@@ -92,17 +107,21 @@ src/
     rendering/            Playwright rendering and validation
     export/               PDF export
     config.ts             Environment config
+    settings.ts           Runtime AI configuration (BYOK)
+    auth.ts               Auth gate state helper
     schemas.ts            Zod schemas
 ```
 
 ## Creating a presentation
 
-1. Go to **Sources** and upload files.
-2. Go to **New Deck**, enter the objective, select sources, and pick a theme.
-3. Review the generated outline.
-4. Click **Generate Deck**.
-5. Open the **Editor** to revise slides, reorder them, or regenerate visuals.
-6. Use **Present** for full-screen mode or **Export** to download a PDF.
+1. Go to **Settings** and paste your OpenAI-compatible API key (base URL and model are configurable too).
+2. Go to **Sources** and upload files.
+3. Go to **New Deck**, enter the objective, select sources, and create the deck.
+4. In the editor click **Generate**.
+5. Revise slides via chat, reorder them, or edit HTML directly.
+6. Use **Present** for full-screen mode or **Export PDF** to download the deck.
+
+See the [User Guide](docs/user-guide.md) for details.
 
 ## Development notes
 
