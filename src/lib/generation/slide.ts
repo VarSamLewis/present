@@ -4,7 +4,7 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import DOMPurify from "isomorphic-dompurify";
 import postcss from "postcss";
 import safeParser from "postcss-safe-parser";
-import { DeckManifest, SlideBundle, slideBundleSchema, chartSpecSchema, SourceChunk } from "@/lib/schemas";
+import { DeckManifest, SlideBundle, chartSpecSchema } from "@/lib/schemas";
 import { Theme } from "@/lib/generation/themes";
 import { getLLMProvider } from "@/lib/llm";
 import { slidePrompt, repairPrompt } from "@/lib/generation/prompts";
@@ -101,7 +101,7 @@ export async function generateSlideBundle({
   );
 
   let html = sanitizeHtml(result.content.html);
-  let css = await validateCss(result.content.css);
+  const css = await validateCss(result.content.css);
   html = replaceCharts(html, result.data);
 
   const bundle: SlideBundle = {
@@ -150,7 +150,7 @@ async function repairIfNeeded(
     );
 
     let html = sanitizeHtml(result.content.html);
-    let css = await validateCss(result.content.css);
+    const css = await validateCss(result.content.css);
     html = replaceCharts(html, result.data);
 
     bundle = {
