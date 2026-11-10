@@ -28,6 +28,18 @@ Or with Docker:
 docker compose up -d --build
 ```
 
+Or on NixOS / with Nix installed:
+
+```bash
+nix develop      # Node 22 + patched Chromium for Playwright, no global installs
+npm ci
+npm run dev
+```
+
+The flake pins nixpkgs to the Playwright version in `package-lock.json`, so
+`npx playwright install` is not needed inside the shell. See
+[Commands → Nix](docs/command.md#nix-flake).
+
 Or deploy to [Railway](https://railway.com) — it builds the Dockerfile and runs
 the `/api/health` check (mount a volume at `/app/data`; see the
 [Deployment Guide](docs/deployment.md#option-b-railway)).

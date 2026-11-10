@@ -1,6 +1,6 @@
 # Vibeslide production image.
 #
-# Base image ships Node 20, Chromium, and all system libraries required by
+# Base image ships Node 24, Chromium, and all system libraries required by
 # Playwright. The version tag must match the `playwright` version resolved in
 # package-lock.json (check with: npm ls playwright).
 FROM mcr.microsoft.com/playwright:v1.61.1-noble

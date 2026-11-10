@@ -7,7 +7,7 @@ to Clerk, if you enable the optional sign-in gate).
 
 ## Requirements
 
-- Node.js 20+ (pinned in `.nvmrc`) **or** Docker
+- Node.js 22+ (pinned in `.nvmrc`) **or** Docker
 - ~2 GB disk (Node modules + Playwright's Chromium)
 - An OpenAI-compatible API key (configured in-app, see the User Guide)
 
@@ -61,7 +61,7 @@ Notes:
 ## Option C: Run directly on a machine
 
 ```bash
-nvm use                 # Node 20 from .nvmrc
+nvm use                 # Node 22 from .nvmrc
 npm install
 npx playwright install chromium    # add --with-deps on fresh Linux servers
 npm run build

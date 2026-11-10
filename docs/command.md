@@ -7,14 +7,14 @@ repository root.
 
 | Tool | Notes |
 |---|---|
-| [nvm](https://github.com/nvm-sh/nvm) | Node version is pinned in `.nvmrc` (20) |
+| [nvm](https://github.com/nvm-sh/nvm) | Node version is pinned in `.nvmrc` (22) |
 | npm | Ships with Node |
 | Docker | Optional, for the container workflow |
 | OpenAI-compatible API key | Entered in the app's Settings page, not the shell |
 
 ```bash
 nvm use            # or: nvm install && nvm use
-node --version     # should be v20.x
+node --version     # should be v22.x
 ```
 
 ## Install
@@ -26,6 +26,36 @@ npx playwright install chromium          # browser used for slide validation + P
 
 `npx playwright install --with-deps chromium` on a fresh Linux server installs
 the required system libraries too. The Docker image already includes both.
+
+## Nix flake
+
+`flake.nix` provides the same toolchain without touching your host system:
+Node 22, npm, Python/make/gcc/pkg-config for `better-sqlite3`, the `sqlite3`
+CLI, and Playwright's patched Chromium. This is the supported path on NixOS,
+where the browser bundled by `npx playwright install` usually cannot start.
+
+```bash
+nix develop                # interactive dev shell
+nix develop -c npm ci      # install deps against the shell's Node
+nix develop -c npm run dev # one-off command
+nix develop -c npm run build
+nix fmt                    # format flake.nix (nixfmt-rfc-style)
+nix flake check            # evaluate the flake
+```
+
+Inside the shell, `PLAYWRIGHT_BROWSERS_PATH` points at nixpkgs' browser bundle
+and `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` is set, so `npm ci` skips the browser
+download and PDF export works out of the box.
+
+> The flake pins nixpkgs to the revision whose `playwright-driver` matches
+> `playwright` in `package-lock.json` (currently 1.61.1). Playwright refuses to
+> drive a mismatched browser revision, so when you bump `playwright`, bump the
+> flake pin too (`nix flake update`) and check `nix eval .#devShells.x86_64-linux.default`
+> still evaluates.
+
+Always run `npm ci` (or `npm rebuild better-sqlite3`) **inside** the shell after
+switching Node versions — `better-sqlite3` is a native addon built for one Node
+ABI at a time.
 
 ## Run
 
@@ -163,6 +193,7 @@ volume and stays public when auth is enabled.
 | `EADDRINUSE :3000` | Use another port: `npm run dev -- -p 3100` |
 | "No API key configured" | Open **Settings** and save a key; click **Test connection** |
 | PDF export fails / blank exports | `npx playwright install chromium` (bare metal) |
+| Chromium won't launch on NixOS | Use `nix develop` — the flake ships a patched Chromium and sets `PLAYWRIGHT_BROWSERS_PATH` |
 | Native module errors after a Node upgrade | `npm rebuild better-sqlite3` or `npm ci` |
 | Sign-in loop locally | Use `npm run dev` on localhost, or unset the Clerk keys |
 | Stale Next.js build/types | `rm -rf .next && npm run build` |
