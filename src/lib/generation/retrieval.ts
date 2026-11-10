@@ -42,7 +42,7 @@ export async function retrieveRelevantChunks({
   try {
     keywordRows = db
       .prepare(
-        `SELECT c.id, c.sourceId, c.index, c.kind, c.text, c.location
+        `SELECT c.id, c.sourceId, c.chunkIndex, c.kind, c.text, c.location
          FROM source_chunks_fts fts
          JOIN source_chunks c ON c.rowid = fts.rowid
          WHERE source_chunks_fts MATCH ? AND c.sourceId IN (${sourceIds.map(() => "?").join(",")})
