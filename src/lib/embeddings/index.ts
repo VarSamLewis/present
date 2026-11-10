@@ -1,15 +1,20 @@
 import crypto from "crypto";
 import OpenAI from "openai";
-import { config } from "@/lib/config";
+import { getEmbeddingConfig } from "@/lib/settings";
 import { db } from "@/lib/db";
-
-const openai = new OpenAI({
-  apiKey: config.EMBEDDING_API_KEY,
-  baseURL: config.EMBEDDING_API_URL,
-});
 
 function hashContent(text: string): string {
   return crypto.createHash("sha256").update(text).digest("hex");
+}
+
+async function embed(texts: string[]): Promise<number[][]> {
+  const { apiKey, baseURL, model } = getEmbeddingConfig();
+  if (!apiKey) {
+    throw new Error("No API key configured. Add your key on the Settings page.");
+  }
+  const openai = new OpenAI({ apiKey, baseURL });
+  const response = await openai.embeddings.create({ model, input: texts });
+  return response.data.map((item) => item.embedding);
 }
 
 export async function getEmbeddings(texts: string[]): Promise<number[][]> {
@@ -32,15 +37,11 @@ export async function getEmbeddings(texts: string[]): Promise<number[][]> {
 
   if (missingIndexes.length > 0) {
     const missingTexts = missingIndexes.map((i) => texts[i]);
-    const response = await openai.embeddings.create({
-      model: config.EMBEDDING_MODEL,
-      input: missingTexts,
-    });
+    const embeddings = await embed(missingTexts);
 
     for (let j = 0; j < missingIndexes.length; j++) {
       const originalIndex = missingIndexes[j];
-      const embedding = response.data[j].embedding;
-      results[originalIndex] = embedding;
+      results[originalIndex] = embeddings[j];
     }
   }
 

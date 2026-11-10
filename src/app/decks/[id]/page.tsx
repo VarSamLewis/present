@@ -3,9 +3,9 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { DeckManifest, SlideBundle } from "@/lib/schemas";
+import { DeckManifest } from "@/lib/schemas";
 import { buildSlideDocument } from "@/lib/rendering/document";
-import { Theme, getTheme } from "@/lib/generation/themes";
+import { getTheme } from "@/lib/generation/themes";
 
 type SlideVersion = {
   id: string;
@@ -123,31 +123,6 @@ export default function DeckEditorPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ orderIndex: slides[idx].orderIndex }),
     });
-    load();
-  }
-
-  async function duplicateSlide(slideId: string) {
-    const current = versions.find((v) => v.slideId === slideId);
-    if (!current) return;
-    const maxOrder = Math.max(...slides.map((s) => s.orderIndex), 0);
-    const res = await fetch("/api/decks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: `${deck?.title} (copy)`,
-        objective: deck?.objective,
-        audience: deck?.audience,
-        styleDirection: deck?.styleDirection,
-        themeId: deck?.themeId,
-      }),
-    });
-    // Simplified duplication: create a new deck with one slide.
-    const data = await res.json();
-    window.location.href = `/decks/${data.deck.id}`;
-  }
-
-  async function deleteSlide(slideId: string) {
-    await fetch(`/api/slides/${slideId}`, { method: "DELETE" });
     load();
   }
 

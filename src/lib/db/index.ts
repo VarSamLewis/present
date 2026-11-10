@@ -4,14 +4,23 @@ import fs from "fs";
 import { config } from "@/lib/config";
 import { migrate } from "@/lib/db/migrations";
 
-const dbDir = path.dirname(config.DATABASE_PATH);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+let instance: Database.Database | null = null;
+
+function getDb(): Database.Database {
+  if (!instance) {
+    const dbDir = path.dirname(config.DATABASE_PATH);
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+    instance = new Database(config.DATABASE_PATH);
+    instance.pragma("journal_mode = WAL");
+    migrate(instance);
+  }
+  return instance;
 }
 
-const db = new Database(config.DATABASE_PATH);
-db.pragma("journal_mode = WAL");
-
-migrate(db);
-
-export { db };
+export const db = new Proxy({} as Database.Database, {
+  get(_target, prop) {
+    return Reflect.get(getDb(), prop);
+  },
+});

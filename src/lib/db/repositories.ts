@@ -19,6 +19,7 @@ export type DeckRecord = {
   styleDirection: string;
   themeId: string;
   manifestJson: string | null;
+  sourceIdsJson: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -90,13 +91,30 @@ export function getChunksBySource(sourceId: string): SourceChunk[] {
 
 // Decks
 
-export function createDeck(record: Omit<DeckRecord, "id" | "createdAt" | "updatedAt">): DeckRecord {
+export function createDeck(
+  record: Omit<DeckRecord, "id" | "createdAt" | "updatedAt" | "sourceIdsJson"> & {
+    sourceIdsJson?: string | null;
+    sourceIds?: string[];
+  }
+): DeckRecord {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
+  const sourceIdsJson = record.sourceIds ? JSON.stringify(record.sourceIds) : record.sourceIdsJson;
   db.prepare(
-    `INSERT INTO decks (id, title, audience, objective, styleDirection, themeId, manifestJson, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(id, record.title, record.audience, record.objective, record.styleDirection, record.themeId, record.manifestJson ?? null, now, now);
-  return { id, ...record, createdAt: now, updatedAt: now };
+    `INSERT INTO decks (id, title, audience, objective, styleDirection, themeId, manifestJson, sourceIdsJson, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(id, record.title, record.audience, record.objective, record.styleDirection, record.themeId, record.manifestJson ?? null, sourceIdsJson ?? null, now, now);
+  return { id, ...record, sourceIdsJson: sourceIdsJson ?? null, createdAt: now, updatedAt: now };
+}
+
+export function getDeckSourceIds(id: string): string[] {
+  const deck = getDeck(id);
+  if (!deck?.sourceIdsJson) return [];
+  try {
+    const parsed = JSON.parse(deck.sourceIdsJson);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 export function updateDeckManifest(id: string, manifestJson: string): void {
@@ -150,6 +168,22 @@ export function updateSlideCurrentVersion(slideId: string, versionId: string): v
 
 export function deleteSlide(id: string): void {
   db.prepare("DELETE FROM slides WHERE id = ?").run(id);
+}
+
+// Settings
+
+export function getSetting(key: string): string | undefined {
+  const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(key) as
+    | { value: string }
+    | undefined;
+  return row?.value;
+}
+
+export function setSetting(key: string, value: string): void {
+  db.prepare(
+    `INSERT INTO settings (key, value, updatedAt) VALUES (?, ?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updatedAt = excluded.updatedAt`
+  ).run(key, value, new Date().toISOString());
 }
 
 // Slide versions

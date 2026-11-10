@@ -1,15 +1,20 @@
 import OpenAI from "openai";
-import { config } from "@/lib/config";
+import { getAIConfig } from "@/lib/settings";
 import { LLMProvider, Message } from "@/lib/llm/types";
 
-const openai = new OpenAI({
-  apiKey: config.AI_API_KEY,
-});
+function getClient(): { client: OpenAI; model: string } {
+  const { apiKey, baseURL, model } = getAIConfig();
+  if (!apiKey) {
+    throw new Error("No API key configured. Add your key on the Settings page.");
+  }
+  return { client: new OpenAI({ apiKey, baseURL }), model };
+}
 
 export class OpenAIProvider implements LLMProvider {
   async generateText(messages: Message[]): Promise<string> {
-    const response = await openai.chat.completions.create({
-      model: config.AI_GENERATION_MODEL,
+    const { client, model } = getClient();
+    const response = await client.chat.completions.create({
+      model,
       messages,
     });
 
@@ -17,8 +22,9 @@ export class OpenAIProvider implements LLMProvider {
   }
 
   async generateObject<T>(messages: Message[], schema: object): Promise<T> {
-    const response = await openai.chat.completions.create({
-      model: config.AI_GENERATION_MODEL,
+    const { client, model } = getClient();
+    const response = await client.chat.completions.create({
+      model,
       messages,
       response_format: {
         type: "json_schema",

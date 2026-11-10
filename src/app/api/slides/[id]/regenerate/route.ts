@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSlide, getSlideVersion, createSlideVersion, updateSlideCurrentVersion, getDeck } from "@/lib/db/repositories";
+import { getSlide, getSlideVersion, createSlideVersion, updateSlideCurrentVersion, getDeck, getDeckSourceIds } from "@/lib/db/repositories";
 import { generateSlideBundle } from "@/lib/generation/slide";
 import { getTheme } from "@/lib/generation/themes";
 import { deckManifestSchema } from "@/lib/schemas";
@@ -16,9 +16,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "Deck not found" }, { status: 404 });
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => ({}));
   const manifest = deckManifestSchema.parse(body.manifest);
-  const sourceIds: string[] = body.sourceIds ?? [];
+  const sourceIds: string[] =
+    Array.isArray(body?.sourceIds) && body.sourceIds.length > 0 ? body.sourceIds : getDeckSourceIds(deck.id);
   const instruction: string | undefined = body.instruction;
 
   const theme = getTheme(deck.themeId);

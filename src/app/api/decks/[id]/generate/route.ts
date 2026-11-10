@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDeck, listSlides, createSlide, createSlideVersion, updateSlideCurrentVersion, updateDeckManifest } from "@/lib/db/repositories";
+import { getDeck, listSlides, createSlide, createSlideVersion, updateSlideCurrentVersion, updateDeckManifest, getDeckSourceIds } from "@/lib/db/repositories";
 import { generateManifest } from "@/lib/generation/manifest";
 import { generateSlideBundle } from "@/lib/generation/slide";
 import { getTheme } from "@/lib/generation/themes";
@@ -12,8 +12,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "Deck not found" }, { status: 404 });
   }
 
-  const body = await request.json();
-  const sourceIds: string[] = body.sourceIds ?? [];
+  const body = await request.json().catch(() => ({}));
+  const sourceIds: string[] =
+    Array.isArray(body?.sourceIds) && body.sourceIds.length > 0 ? body.sourceIds : getDeckSourceIds(id);
 
   // Re-generate manifest from objective + sources.
   const manifest = await generateManifest({

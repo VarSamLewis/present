@@ -100,6 +100,26 @@ export const MIGRATIONS: Array<{ version: number; sql: string; guard?: (db: Data
       return !columns.some((c) => c.name === "manifestJson");
     },
   },
+  {
+    version: 3,
+    sql: `
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      );
+    `,
+  },
+  {
+    version: 4,
+    sql: `
+      ALTER TABLE decks ADD COLUMN sourceIdsJson TEXT;
+    `,
+    guard: (db: Database.Database) => {
+      const columns = db.prepare("PRAGMA table_info(decks)").all() as Array<{ name: string }>;
+      return !columns.some((c) => c.name === "sourceIdsJson");
+    },
+  },
 ];
 
 export function migrate(db: Database.Database) {
@@ -121,7 +141,17 @@ export function migrate(db: Database.Database) {
       if (migration.guard && !migration.guard(db)) {
         continue;
       }
-      db.exec(migration.sql);
+      try {
+        db.exec(migration.sql);
+      } catch (error) {
+        // Another process may have applied this migration concurrently
+        // (e.g. parallel build workers or a second app instance). Treat
+        // "already exists" failures as success.
+        const message = error instanceof Error ? error.message : String(error);
+        if (!/already exists|duplicate column/i.test(message)) {
+          throw error;
+        }
+      }
       db.prepare("INSERT OR REPLACE INTO schema_version (version) VALUES (?)").run(migration.version);
     }
   }

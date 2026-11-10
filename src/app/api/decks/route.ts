@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createDeck, listDecks } from "@/lib/db/repositories";
 import { generateManifest } from "@/lib/generation/manifest";
-import { createSlide } from "@/lib/db/repositories";
 
 export async function GET() {
   const decks = listDecks();
@@ -32,6 +31,7 @@ export async function POST(request: NextRequest) {
     styleDirection,
     themeId: themeId ?? "clean",
     manifestJson: manifest ? JSON.stringify(manifest) : null,
+    sourceIds: Array.isArray(sourceIds) ? sourceIds : [],
   });
 
   return NextResponse.json({ deck });
