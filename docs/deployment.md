@@ -3,7 +3,7 @@
 Vibeslide is a self-contained web app: one Node.js process backed by SQLite and
 the local filesystem, plus a headless Chromium used for slide validation and
 PDF export. The only outbound calls are to your configured LLM endpoint (and
-to WorkOS, if you enable the optional sign-in gate).
+to Clerk, if you enable the optional sign-in gate).
 
 ## Requirements
 
@@ -29,10 +29,8 @@ next to `docker-compose.yml` (compose reads it automatically):
 
 ```bash
 # Optional sign-in gate (see "Authentication" below)
-WORKOS_API_KEY=
-WORKOS_CLIENT_ID=
-WORKOS_COOKIE_PASSWORD=
-WORKOS_REDIRECT_URI=
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
 ```
 
 ## Option B: Railway
@@ -47,7 +45,8 @@ Dockerfile build and the `/api/health` health check.
    and exports there. Without a volume that data is lost on every deploy.
 3. Generate a domain. The container listens on Railway's `$PORT`, so the
    detected target port is correct out of the box.
-4. Optional: add the `WORKOS_*` variables to require sign-in.
+4. Optional: add `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`
+   to require sign-in. The health check stays public.
 
 Notes:
 
@@ -131,32 +130,33 @@ server {
 }
 ```
 
-> If your proxy rewrites or terminates TLS in a way that changes the public
-> origin, set `WORKOS_REDIRECT_URI=https://slides.example.com/api/auth/callback`
-> so sign-in redirects stay correct.
+> If your proxy rewrites or terminates TLS, make sure the public origin reaches
+> the app (`X-Forwarded-Host` / `X-Forwarded-Proto`) so Clerk's redirect URLs
+> stay correct. Clerk also has a frontend API proxy option if browsers cannot
+> reach Clerk directly (`frontendApiProxy` in `src/proxy.ts`).
 
 ---
 
 ## Authentication (optional but recommended for hosted installs)
 
 By default the app has **no login** — anyone who can reach it can use your API
-key. To require sign-in via [WorkOS AuthKit](https://workos.com):
+key. To require sign-in via [Clerk](https://clerk.com):
 
-1. Create a WorkOS account and an AuthKit application in the dashboard.
-2. In the AuthKit dashboard, whitelist your callback URL(s):
-   - `http://localhost:3000/api/auth/callback` (local)
-   - `https://slides.example.com/api/auth/callback` (production)
-3. Copy the **Client ID** and **Secret Key** from the dashboard.
-4. Generate a cookie password: `openssl rand -base64 32`
-5. Set the four variables (`WORKOS_API_KEY`, `WORKOS_CLIENT_ID`,
-   `WORKOS_COOKIE_PASSWORD`, optionally `WORKOS_REDIRECT_URI`) in your env /
-   `.env` and restart.
+1. Create an application in the [Clerk dashboard](https://dashboard.clerk.com).
+2. Copy the **Publishable key** (`pk_...`) and **Secret key** (`sk_...`).
+3. Set `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` in your
+   environment / `.env` and restart.
+4. Optionally add `https://slides.example.com` (and
+   `http://localhost:3000`) as allowed origins in the Clerk dashboard.
 
-Until all three required variables are set the app runs wide open, so local
-development needs no setup. Once enabled, every page requires sign-in and a
-"Sign out" link appears on the home page.
+Until both variables are set the app runs wide open, so local development
+needs no setup. Once enabled, every page requires sign-in, `/sign-in` and
+`/sign-up` are served by the built-in Clerk components, API routes return
+`401` when unauthenticated, and the home page shows the Clerk user button
+(sign out lives there).
 
-AuthKit has a generous free tier that covers personal and small-team use.
+Keys are read at runtime, not baked into the image, so the same Docker image
+works for local and hosted installs.
 
 ---
 
@@ -172,10 +172,9 @@ All are optional. Keys are normally managed in the app's Settings page.
 | `MAX_SOURCE_CHUNKS_PER_SLIDE` | `8` | Retrieval depth per slide |
 | `MAX_SLIDE_REPAIR_ATTEMPTS` | `2` | Render-failure repair loop |
 | `SLIDE_GENERATION_CONCURRENCY` | `2` | Reserved (generation currently sequential) |
-| `WORKOS_API_KEY` | unset | Enables the auth gate when set |
-| `WORKOS_CLIENT_ID` | unset | Required for the auth gate |
-| `WORKOS_COOKIE_PASSWORD` | unset | ≥32-char random string, seals session cookies |
-| `WORKOS_REDIRECT_URI` | derived from request origin | Override behind rewriting proxies |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | unset | Enables the auth gate when set with the secret key |
+| `CLERK_SECRET_KEY` | unset | Required for the auth gate; never expose to the browser |
+| `CLERK_PUBLISHABLE_KEY` | unset | Server-side alternative to the `NEXT_PUBLIC_` key |
 
 ## Data layout & backups
 
@@ -208,5 +207,5 @@ steps.
 | `EADDRINUSE :3000` | Another process owns the port; change the mapping (`3100:3000`) or stop the old process |
 | PDF export fails / blank exports | Chromium missing: `npx playwright install chromium` (bare metal). The Docker image ships it |
 | Native module errors after Node upgrade (`better-sqlite3`) | `npm rebuild better-sqlite3`, or reinstall with `npm ci` |
-| Sign-in redirect loops | Callback URL not whitelisted in the AuthKit dashboard, or `WORKOS_REDIRECT_URI` doesn't match the public URL |
+| Sign-in redirect loops | Add the deployment origin as an allowed origin in the Clerk dashboard and confirm the proxy forwards the public host/protocol |
 | Slides ignore uploaded documents | Re-create the deck selecting the intended sources before generating |

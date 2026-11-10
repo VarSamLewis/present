@@ -7,7 +7,7 @@ refine, present, and export to PDF.
 
 **Privacy model:** everything runs on your machine (or your server). Your
 files, database, and exports never leave it. The only outbound traffic is
-calls to the LLM endpoint you configure (plus WorkOS if sign-in is enabled).
+calls to the LLM endpoint you configure (plus Clerk if sign-in is enabled).
 
 ---
 

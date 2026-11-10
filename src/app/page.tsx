@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UserButton } from "@clerk/nextjs";
 import { isConfigured } from "@/lib/settings";
 import { isAuthConfigured } from "@/lib/auth";
 
@@ -13,9 +14,9 @@ export default function HomePage() {
       <div className="flex items-start justify-between">
         <h1 className="text-4xl font-bold mb-4">Vibeslide</h1>
         {authConfigured && (
-          <a href="/api/auth/logout" className="text-sm text-slate-500 hover:text-slate-700 hover:underline mt-2">
-            Sign out
-          </a>
+          <div className="mt-1">
+            <UserButton />
+          </div>
         )}
       </div>
       <p className="text-lg text-slate-600 mb-8">

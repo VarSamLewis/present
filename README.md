@@ -71,7 +71,7 @@ No `.env.local` is required. API keys are configured in the app under **Settings
 bring your own OpenAI-compatible key and it is stored in the local database.
 
 Optionally, copy `.env.example` to `.env.local` to tune storage paths, the embedding model, or the
-generation pipeline. To require sign-in on a hosted install, set the `WORKOS_*` variables (see the
+generation pipeline. To require sign-in on a hosted install, set the Clerk keys (see the
 [Deployment Guide](docs/deployment.md#authentication-optional-but-recommended-for-hosted-installs)).
 
 ## Running locally
@@ -95,7 +95,7 @@ The app runs at `http://localhost:3000` by default.
 src/
   app/                    Next.js app router pages
   components/             Shared React components
-  proxy.ts                Request gate (WorkOS AuthKit sign-in when configured)
+  proxy.ts                Request gate (Clerk sign-in when configured)
   lib/
     db/                   SQLite schema, migrations, queries
     storage/              Filesystem helpers
