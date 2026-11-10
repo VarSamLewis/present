@@ -1,7 +1,7 @@
 import type { NextFetchEvent, NextMiddleware, NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { clerkMiddleware } from "@clerk/nextjs/server";
-import { isAuthConfigured } from "@/lib/auth";
+import { isAuthConfigured, isDevAuthRequest } from "@/lib/auth";
 
 const PUBLIC_PATHS = ["/sign-in", "/sign-up", "/api/health"];
 const CLERK_INTERNAL_PREFIX = "/__clerk";
@@ -14,6 +14,7 @@ function isPublicPath(pathname: string): boolean {
 }
 
 let clerkProxy: NextMiddleware | null = null;
+let loggedDevBypass = false;
 
 function getClerkProxy() {
   // Created lazily so importing this file never requires Clerk to be configured.
@@ -41,6 +42,13 @@ function getClerkProxy() {
 
 export default function proxy(request: NextRequest, event: NextFetchEvent) {
   if (!isAuthConfigured()) {
+    return NextResponse.next();
+  }
+  if (isDevAuthRequest(request.headers.get("host"))) {
+    if (!loggedDevBypass) {
+      loggedDevBypass = true;
+      console.info("[auth] development mode: bypassing sign-in for localhost requests");
+    }
     return NextResponse.next();
   }
   return getClerkProxy()(request, event);

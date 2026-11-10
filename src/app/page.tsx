@@ -1,19 +1,21 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { UserButton } from "@clerk/nextjs";
 import { isConfigured } from "@/lib/settings";
-import { isAuthConfigured } from "@/lib/auth";
+import { isAuthConfigured, isDevAuthRequest } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-export default function HomePage() {
+export default async function HomePage() {
   const configured = isConfigured();
   const authConfigured = isAuthConfigured();
+  const devBypass = isDevAuthRequest((await headers()).get("host"));
 
   return (
     <main className="max-w-4xl mx-auto p-8">
       <div className="flex items-start justify-between">
         <h1 className="text-4xl font-bold mb-4">Vibeslide</h1>
-        {authConfigured && (
+        {authConfigured && !devBypass && (
           <div className="mt-1">
             <UserButton />
           </div>

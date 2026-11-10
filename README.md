@@ -73,6 +73,7 @@ bring your own OpenAI-compatible key and it is stored in the local database.
 Optionally, copy `.env.example` to `.env.local` to tune storage paths, the embedding model, or the
 generation pipeline. To require sign-in on a hosted install, set the Clerk keys (see the
 [Deployment Guide](docs/deployment.md#authentication-optional-but-recommended-for-hosted-installs)).
+`npm run dev` on localhost skips sign-in even when those keys are set.
 
 ## Running locally
 

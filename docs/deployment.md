@@ -158,6 +158,15 @@ needs no setup. Once enabled, every page requires sign-in, `/sign-in` and
 Keys are read at runtime, not baked into the image, so the same Docker image
 works for local and hosted installs.
 
+### Local development
+
+`npm run dev` bypasses the gate for requests to `localhost`, `127.0.0.1`, and
+`::1` even when Clerk keys are configured, so a shared `.env.local` won't
+force a sign-in loop while developing. The bypass is compiled out of
+production builds — `npm start` and Docker always enforce the gate, and a
+spoofed `Host` header cannot disable it. To test sign-in locally, run
+`npm run build && npm start`.
+
 ---
 
 ## Environment variables
