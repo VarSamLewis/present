@@ -9,6 +9,7 @@ A local-first web application that turns documents into presentations. Each slid
 - **[User Guide](docs/user-guide.md)** — setup, workflow, tips, troubleshooting
 - **[Deployment Guide](docs/deployment.md)** — Docker, bare-metal servers, TLS, auth, backups
 - **[Commands](docs/command.md)** — install, run, test, Docker, Railway, backups
+- **[Demo Guide](docs/demo.md)** — a 10-minute walkthrough with sample sources
 
 ## Quick start
 
