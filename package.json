@@ -19,7 +19,7 @@
     "isomorphic-dompurify": "^2.24.0",
     "mammoth": "^1.10.0",
     "marked": "^16.0.0",
-    "next": "16.2.10",
+    "next": "16.4.6",
     "openai": "^4.90.0",
     "pdf-parse": "^1.1.1",
     "playwright": "^1.52.0",
@@ -34,13 +34,13 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^20",
+    "@types/node": "^22.20.5",
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.10",
+    "eslint-config-next": "16.4.6",
     "typescript": "^5",
-    "vitest": "^3.0.0"
+    "vitest": "^5.1.0"
   }
 }
